@@ -1,5 +1,7 @@
 package one.digitalinnovation.gof.service.impl;
 
+import one.digitalinnovation.gof.dto.ClienteDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import one.digitalinnovation.gof.model.Cliente;
@@ -9,40 +11,51 @@ import one.digitalinnovation.gof.model.EnderecoRepository;
 import one.digitalinnovation.gof.service.ClienteService;
 import one.digitalinnovation.gof.service.ViaCepService;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
 public class ClienteServiceImpl implements ClienteService{
 
-    @Autowired
-    private ClienteRepository clienteRepository;
-    @Autowired
-    private EnderecoRepository enderecoRepository;
-    @Autowired
-    private ViaCepService viaCepService;
+    @Autowired private ClienteRepository clienteRepository;
+    @Autowired private EnderecoRepository enderecoRepository;
+    @Autowired private ViaCepService viaCepService;
+    @Autowired private ModelMapper mapper;
 
     @Override
-    public Iterable<Cliente> buscarTodos() {
-        return clienteRepository.findAll();
+    public List<ClienteDTO> buscarTodos() {
+        return clienteRepository.findAll()
+                .stream()
+                .map(c -> mapper.map(c, ClienteDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Cliente buscarPorId(Long id) {
-        Optional<Cliente> cliente = clienteRepository.findById(id);
-        return cliente.get();
+    public ClienteDTO buscarPorId(Long id) {
+        Cliente c = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+        return mapper.map(c, ClienteDTO.class);
     }
 
     @Override
-    public void inserir(Cliente cliente) {
-        salvarClienteComCep(cliente);
+    public ClienteDTO inserir(ClienteDTO dto) {
+        Cliente entidade = converterParaEntidade(dto);
+        salvarClienteComCep(entidade);
+        return mapper.map(entidade, ClienteDTO.class);
     }
 
     @Override
-    public void atualizar(Long id, Cliente cliente) {
-        Optional<Cliente> clienteBd = clienteRepository.findById(id);
-        if (clienteBd.isPresent()) {
-            salvarClienteComCep(cliente);
+    public ClienteDTO atualizar(Long id, ClienteDTO dto) {
+        Optional<Cliente> opc = clienteRepository.findById(id);
+        if (opc.isPresent()) {
+            Cliente entidade = converterParaEntidade(dto);
+            entidade.setId(id);
+            salvarClienteComCep(entidade);
+            return mapper.map(entidade, ClienteDTO.class);
+        } else {
+            throw new RuntimeException("Cliente não encontrado");
         }
     }
 
@@ -51,12 +64,21 @@ public class ClienteServiceImpl implements ClienteService{
         clienteRepository.deleteById(id);
     }
 
+    private Cliente converterParaEntidade(ClienteDTO dto) {
+        // mapeia nome e id automaticamente; 'cep' precisa virar um Endereco parcial
+        Cliente c = mapper.map(dto, Cliente.class);
+        Endereco e = new Endereco();
+        e.setCep(dto.getCep());
+        c.setEndereco(e);
+        return c;
+    }
+
     private void salvarClienteComCep(Cliente cliente) {
         String cep = cliente.getEndereco().getCep();
         Endereco endereco = enderecoRepository.findById(cep).orElseGet(() -> {
-            Endereco novoEndereco = viaCepService.consultarCep(cep);
-            enderecoRepository.save(novoEndereco);
-            return novoEndereco;
+            Endereco novo = viaCepService.consultarCep(cep);
+            enderecoRepository.save(novo);
+            return novo;
         });
         cliente.setEndereco(endereco);
         clienteRepository.save(cliente);

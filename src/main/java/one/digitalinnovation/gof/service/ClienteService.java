@@ -1,16 +1,19 @@
 package one.digitalinnovation.gof.service;
 
+import one.digitalinnovation.gof.dto.ClienteDTO;
 import one.digitalinnovation.gof.model.Cliente;
+
+import java.util.List;
 
 public interface ClienteService {
 
-    Iterable<Cliente> buscarTodos();
+    List<ClienteDTO> buscarTodos();
 
-    Cliente buscarPorId(Long id);
+    ClienteDTO buscarPorId(Long id);
 
-    void inserir(Cliente cliente);
+    ClienteDTO inserir(ClienteDTO clienteDto);
 
-    void atualizar(Long id, Cliente cliente);
+    ClienteDTO atualizar(Long id, ClienteDTO clienteDto);
 
     void deletar(Long id);
 
