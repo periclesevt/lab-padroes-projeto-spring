@@ -3,6 +3,7 @@ package one.digitalinnovation.gof.controller;
 import jakarta.validation.Valid;
 import one.digitalinnovation.gof.dto.ClienteDTO;
 import one.digitalinnovation.gof.service.ClienteService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class ClienteRestController {
     @PostMapping
     public ResponseEntity<ClienteDTO> inserir(@RequestBody @Valid ClienteDTO dto) {
         ClienteDTO criado = clienteService.inserir(dto);
-        return ResponseEntity.ok(criado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
 
     @PutMapping("/{id}")

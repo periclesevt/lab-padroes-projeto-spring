@@ -12,7 +12,7 @@ import one.digitalinnovation.gof.service.ClienteService;
 import one.digitalinnovation.gof.service.ViaCepService;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 
@@ -35,7 +35,7 @@ public class ClienteServiceImpl implements ClienteService{
     @Override
     public ClienteDTO buscarPorId(Long id) {
         Cliente c = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new NoSuchElementException("Cliente não encontrado"));
         return mapper.map(c, ClienteDTO.class);
     }
 
@@ -48,24 +48,24 @@ public class ClienteServiceImpl implements ClienteService{
 
     @Override
     public ClienteDTO atualizar(Long id, ClienteDTO dto) {
-        Optional<Cliente> opc = clienteRepository.findById(id);
-        if (opc.isPresent()) {
-            Cliente entidade = converterParaEntidade(dto);
-            entidade.setId(id);
-            salvarClienteComCep(entidade);
-            return mapper.map(entidade, ClienteDTO.class);
-        } else {
-            throw new RuntimeException("Cliente não encontrado");
+        if (!clienteRepository.existsById(id)) {
+            throw new NoSuchElementException("ID " + id);
         }
+        Cliente entidade = converterParaEntidade(dto);
+        entidade.setId(id);
+        salvarClienteComCep(entidade);
+        return mapper.map(entidade, ClienteDTO.class);
     }
 
     @Override
     public void deletar(Long id) {
+        if (!clienteRepository.existsById(id)) {
+            throw new NoSuchElementException("ID " + id);
+        }
         clienteRepository.deleteById(id);
     }
 
     private Cliente converterParaEntidade(ClienteDTO dto) {
-        // mapeia nome e id automaticamente; 'cep' precisa virar um Endereco parcial
         Cliente c = mapper.map(dto, Cliente.class);
         Endereco e = new Endereco();
         e.setCep(dto.getCep());

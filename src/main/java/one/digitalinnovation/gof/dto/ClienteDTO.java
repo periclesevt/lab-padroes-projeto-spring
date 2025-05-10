@@ -1,10 +1,15 @@
 package one.digitalinnovation.gof.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class ClienteDTO {
     private Long id;
 
+    @NotBlank(message = "O nome nao pode estar em branco")
     private String nome;
 
+
+    @NotBlank(message = "O CEP nao pode estar em branco")
     private String cep;
 
     public Long getId() {
