@@ -1,7 +1,6 @@
 package one.digitalinnovation.gof.service;
 
 import one.digitalinnovation.gof.dto.ClienteDTO;
-import one.digitalinnovation.gof.model.Cliente;
 
 import java.util.List;
 
